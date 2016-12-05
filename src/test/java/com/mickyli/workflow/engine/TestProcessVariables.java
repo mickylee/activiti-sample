@@ -7,6 +7,9 @@ import org.activiti.engine.ProcessEngine;
 import org.activiti.engine.ProcessEngines;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.history.HistoricActivityInstance;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.history.HistoricVariableInstance;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.runtime.ProcessInstance;
@@ -104,7 +107,7 @@ public class TestProcessVariables {
     @Test  
     public void completeMyPersonalTask(){  
         //任务ID  
-        String taskId = "22504";  
+        String taskId = "27502";  
         processEngine.getTaskService()//与正在执行的任务管理相关的Service  
                     .complete(taskId);  
         System.out.println("完成任务：任务ID："+taskId);  
@@ -151,4 +154,93 @@ public class TestProcessVariables {
             }  
         }  
     }  
+    
+    /** 
+     * 历史任务查询 
+     */  
+    @Test  
+    public void historyTaskList(){  
+        List<HistoricTaskInstance> list = processEngine.getHistoryService() // 历史任务Service  
+                .createHistoricTaskInstanceQuery() // 创建历史任务实例查询  
+                .taskAssignee("micky") // 指定办理人  
+                .finished() // 查询已经完成的任务    
+                .list();  
+        for(HistoricTaskInstance hti:list){  
+            System.out.println("任务ID:"+hti.getId());  
+            System.out.println("流程实例ID:"+hti.getProcessInstanceId());  
+            System.out.println("班里人："+hti.getAssignee());  
+            System.out.println("创建时间："+hti.getCreateTime());  
+            System.out.println("结束时间："+hti.getEndTime());  
+            System.out.println("===========================");  
+        }  
+    }
+    /**查询历史任务*/  
+    @Test  
+    public void findHistoryTask(){  
+        String processInstanceId = "15001";  
+        List<HistoricTaskInstance> list = processEngine.getHistoryService()//与历史数据（历史表）相关的Service  
+                        .createHistoricTaskInstanceQuery()//创建历史任务实例查询  
+                        .processInstanceId(processInstanceId)//  
+                        .orderByHistoricTaskInstanceStartTime().asc()  
+                        .list();  
+        if(list!=null && list.size()>0){  
+            for(HistoricTaskInstance hti:list){  
+                System.out.println(hti.getId()+"    "+hti.getName()+"    "+hti.getProcessInstanceId()+"   "+hti.getStartTime()+"   "+hti.getEndTime()+"   "+hti.getDurationInMillis());  
+                System.out.println("################################");  
+            }  
+        }  
+    }
+    
+    /** 
+     * 查询历史流程实例 
+     */  
+    @Test  
+    public void getHistoryProcessInstance(){  
+        HistoricProcessInstance hpi = processEngine.getHistoryService() // 历史任务Service  
+            .createHistoricProcessInstanceQuery() // 创建历史流程实例查询  
+            .processInstanceId("15001") // 指定流程实例ID  
+            .singleResult();  
+        System.out.println("流程实例ID:"+hpi.getId());  
+        System.out.println("创建时间："+hpi.getStartTime());  
+        System.out.println("结束时间："+hpi.getEndTime());  
+    }  
+    
+    /** 
+     * 历史活动查询 
+     */  
+    @Test  
+    public void historyActInstanceList(){  
+        List<HistoricActivityInstance> list = processEngine.getHistoryService() // 历史任务Service  
+                .createHistoricActivityInstanceQuery() // 创建历史活动实例查询  
+                .processInstanceId("22501") // 指定流程实例id  
+                .finished() // 查询已经完成的任务    
+                .list();  
+        for(HistoricActivityInstance hai:list){  
+            System.out.println("任务ID:"+hai.getId());  
+            System.out.println("流程实例ID:"+hai.getProcessInstanceId());  
+            System.out.println("活动名称："+hai.getActivityName());  
+            System.out.println("办理人："+hai.getAssignee());  
+            System.out.println("开始时间："+hai.getStartTime());  
+            System.out.println("结束时间："+hai.getEndTime());  
+            System.out.println("===========================");  
+        }  
+    }  
+    
+    /**查询历史活动-->某一次流程的执行一共经历了多少个活动*/  
+    @Test  
+    public void findHistoryActiviti(){  
+        String processInstanceId = "22501";  
+        List<HistoricActivityInstance> list = processEngine.getHistoryService()//  
+                        .createHistoricActivityInstanceQuery()//创建历史活动实例的查询  
+                        .processInstanceId(processInstanceId)//  
+                        .orderByHistoricActivityInstanceStartTime().asc()//  
+                        .list();  
+        if(list!=null && list.size()>0){  
+            for(HistoricActivityInstance hai:list){  
+                System.out.println(hai.getId()+"   "+hai.getProcessInstanceId()+"   "+hai.getActivityType()+"  "+hai.getStartTime()+"   "+hai.getEndTime()+"   "+hai.getDurationInMillis());  
+                System.out.println("#####################");  
+            }  
+        }  
+    } 
+    
 }
